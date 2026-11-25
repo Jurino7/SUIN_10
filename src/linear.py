@@ -70,13 +70,9 @@ class Linear:
         np.ndarray
             Pole tvaru `(n_vzorku, n_jednotek)`.
         """
-        # assert  Ověřte, že x je 2D pole (ma atribut ndim == 2)
-        # assert  Ověřte, že x.shape[1] odpovida prvnimu rozmeru self.weights
-        raise NotImplementedError(
-            "Úkol: (brana z Cviceni 09) spocitejte z = x @ self.weights + "
-            "(self.bias if self.bias is not None else 0.0) a vratte ho - zadnou "
-            "aktivaci zde neaplikujte."
-        )
+        assert x.ndim == 2, "x musi byt 2D pole (n_vzorku, n_vstupu)"
+        assert x.shape[1] == self.weights.shape[0], "n_vstupu musi odpovidat prvnimu rozmeru vah"
+        return x @ self.weights + (self.bias if self.bias is not None else 0.0)
 
     def update(
         self,
@@ -111,13 +107,11 @@ class Linear:
         learning_rate : float
             Kladna delka kroku gradientniho sestupu.
         """
-        # assert  Ověřte, že weight_gradient ma stejny tvar jako self.weights
-        # assert  Ověřte, že learning_rate je kladne cislo
-        raise NotImplementedError(
-            "Úkol: aktualizujte self.weights = self.weights - learning_rate * "
-            "weight_gradient; pokud self.bias is not None, obdobne "
-            "self.bias = self.bias - learning_rate * bias_gradient."
-        )
+        assert weight_gradient.shape == self.weights.shape, "gradient vah musi mit tvar vah"
+        assert learning_rate > 0, "learning_rate musi byt kladne cislo"
+        self.weights = self.weights - learning_rate * weight_gradient
+        if self.bias is not None and bias_gradient is not None:
+            self.bias = self.bias - learning_rate * bias_gradient
 
     def __call__(self, x: np.ndarray) -> np.ndarray:
         """Zkratka pro `forward` - umoznuje volat instanci jako funkci.

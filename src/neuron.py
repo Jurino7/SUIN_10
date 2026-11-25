@@ -20,6 +20,8 @@ nevraci), vahy upravuje `Linear.update`.
 
 from __future__ import annotations
 
+import os
+
 import numpy as np
 
 from src.activations import Activation, Sigmoid, make_activation
@@ -134,13 +136,18 @@ class Neuron:
         path : str
             Cesta k vystupnimu .npz souboru.
         """
-        # assert  Ověřte, že self.linear.weights je typu np.ndarray
-        raise NotImplementedError(
-            "Úkol: sestavte slovnik klicu {'weights':..., 'activation_name':...} "
-            "(pripadne 'bias' pokud self.linear.bias is not None a 'temperature' "
-            "pokud je self.activation instance Sigmoid) a ulozte ho pomoci "
-            "np.savez(path, **slovnik)."
-        )
+        assert type(self.linear.weights) == np.ndarray, "weights musi byt np.ndarray"
+
+        archiv: dict[str, object] = {
+            "weights": self.linear.weights,
+            "activation_name": type(self.activation).__name__,
+        }
+        if self.linear.bias is not None:
+            archiv["bias"] = self.linear.bias
+        if isinstance(self.activation, Sigmoid):
+            archiv["temperature"] = self.activation.temperature
+
+        np.savez(path, **archiv)
 
     @classmethod
     def load(cls, path: str) -> Neuron:
@@ -167,10 +174,16 @@ class Neuron:
             ulozeni - `load(p).forward(X)` musi davat stejne vysledky jako
             puvodni neuron pred ulozenim.
         """
-        # assert  Ověřte, že soubor path existuje (napr. os.path.exists)
-        raise NotImplementedError(
-            "Úkol: nactete archiv pres np.load(path), precte 'weights' a "
-            "volitelne 'bias' (None pokud klic chybi), sestavte Linear(weights, bias), "
-            "pomoci make_activation('activation_name'[, temperature=...]) sestavte "
-            "aktivaci a vratte cls(linear, activation)."
-        )
+        assert os.path.exists(path), f"Soubor s modelem neexistuje: {path}"
+
+        with np.load(path) as archiv:
+            weights = archiv["weights"]
+            bias = archiv["bias"] if "bias" in archiv else None
+            temperature = (
+                float(archiv["temperature"]) if "temperature" in archiv else 1.0
+            )
+            activation = make_activation(
+                str(archiv["activation_name"]), temperature=temperature
+            )
+        linear = Linear(weights, bias)
+        return cls(linear, activation)
